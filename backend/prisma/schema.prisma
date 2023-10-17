@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// schema.prisma
+
+// Define your data model for User
+model User {
+  id                  String    @id @default(uuid())
+  username            String
+  email               String    @unique
+  firstName           String?
+  lastName            String?
+  address             String?
+  phone               String?
+  dateOfBirth         DateTime?
+  driverLicenseNumber String?
+  driverLicenseExpiry DateTime?
+  creditCardInfo      String? // You may want to store this securely in a real application
+
+  // Define the relationship with Reservations
+  reservations      Reservation[]
+  // Define the relationship with Favorite Agency
+  favoriteAgency    Agency?            @relation(fields: [favoriteAgencyId], references: [id])
+  favoriteAgencyId  String?
+  // Define the relationship with Loyalty Membership
+  loyaltyMembership LoyaltyMembership?
+  // Define the relationship with Reviews
+  reviews           Review[]
+  // Define the relationship with Notifications
+  notifications     Notification[]
+  // Define the relationship with Messages
+  // sentMessages         Message[] @relation("SentMessages")
+  // receivedMessages     Message[] @relation("ReceivedMessages")
+  // Define other relationships as needed
+  Comment           Comment[]
+  Like              Like[]
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  startDate DateTime
+  endDate   DateTime
+  totalCost Float
+  status    String // You can use an enum for statuses (e.g., "Pending", "Confirmed", "Cancelled")
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String    
+  car       Car      @relation(fields: [carId], references: [id])
+  carId     String
+  // Add more reservation-related properties as needed
+  // ...
+}
+
+// Define your data model for Agency
+model Agency {
+  id                 String   @id @default(uuid())
+  name               String
+  address            String?
+  city               String?
+  state              String?
+  zipCode            String?
+  phone              String?
+  email              String?
+  website            String?
+  businessHours      String?
+  rentalPolicies     String?
+  numberOfCars       Int?
+  availableCarTypes  String[]
+  averageRentalPrice Float?
+  averageRating      Float?
+  reviews            Review[]
+  specialOffers      String?
+  images             String[]
+  // Define the relationship with Cars
+  cars               Car[]
+  // Define the relationship with Posts
+  posts              Post[]
+
+  // Define the relationship with Messages
+  // sentMessages    Message[] @relation("SentMessages")
+  // receivedMessages Message[] @relation("ReceivedMessages")
+  // Define other relationships as needed
+  User User[]
+}
+
+// Define your data model for Posts
+model Post {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  createdAt   DateTime  @default(now())
+  agency      Agency    @relation(fields: [agencyId], references: [id])
+  agencyId    String
+  comments    Comment[]
+  likes       Like[]
+  // Define other relationships as needed
+}
+
+// Define your data model for Cars
+model Car {
+  id                 String    @id @default(uuid())
+  make               String
+  model              String
+  year               Int
+  registrationNumber String?
+  color              String?
+  mileage            Int?
+  vin                String?
+  fuelType           String?
+  transmissionType   String?
+  seatingCapacity    Int?
+  engineType         String?
+  features           String[]
+  imageUrls          String[]
+  dailyRate          Float?
+  isAvailable        Boolean?
+  availableFrom      DateTime?
+  lastServiceDate    DateTime?
+  maintenanceHistory String?
+  averageRating      Float?
+
+  agency   Agency @relation(fields: [agencyId], references: [id])
+  agencyId String
+
+  location String
+
+  reviews     Review[]
+  // Define other relationships as needed
+  Reservation Reservation[]
+}
+
+// schema.prisma
+
+model Review {
+  id        String   @id @default(uuid())
+  text      String
+  rating    Float
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  car       Car      @relation(fields: [carId], references: [id])
+  carId     String
+  // Add more review-related properties as needed
+  // ...
+  Agency    Agency?  @relation(fields: [agencyId], references: [id])
+  agencyId  String?
+}
+
+// Define your data model for Comments
+model Comment {
+  id        String   @id @default(uuid())
+  text      String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  author    User     @relation(fields: [userId], references: [id])
+  userId    String
+  // Define other relationships as needed
+}
+
+// Define your data model for Likes
+model Like {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String
+}
+
+// Define your data model for Notifications
+model Notification {
+  id        String   @id @default(uuid())
+  text      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  // Add more notification-related fields as needed
+  // ...
+}
+
+// Define your data model for Messages
+// model Message {
+//   id        String     @id @default(uuid())
+//   text      String
+//   createdAt DateTime @default(now())
+//   sender    User    @relation("SentMessages", fields: [senderId], references: [id])
+//   senderId  String
+//   agency    Agency  @relation("ReceivedMessages", fields: [agencyId], references: [id])
+//   agencyId  String
+// }
+
+// schema.prisma
+
+model LoyaltyMembership {
+  id           Int      @id @default(autoincrement())
+  membershipId String   @unique
+  points       Int
+  tier         String // You can use an enum for membership tiers (e.g., "Silver", "Gold", "Platinum")
+  joinDate     DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String   @unique
+  // Add more loyalty membership-related properties as needed
+  // ...
+}
