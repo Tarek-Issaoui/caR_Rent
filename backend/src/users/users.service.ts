@@ -1,26 +1,56 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthService } from 'src/auth/auth.service';
+import * as bcrypt from 'bcrypt';
+const salt=10
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly prisma:PrismaService ,private readonly authService:AuthService){}
+
+  //register the use 
+  async create(createUserDto: CreateUserDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where:{ email :createUserDto.email}
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already registered');
+    }
+    const hashedPassword=await bcrypt.hash(createUserDto.password,salt);
+    await this.prisma.user.create({
+      data:{...createUserDto,password:hashedPassword}
+    });
+    //Auto-login the user after registration 
+    return { message: 'User registered successfully' };
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    return await this.prisma.user.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string) {
+    return await this.prisma.user.findUnique({
+      where:{id}
+    });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    return await this.prisma.user.update({
+      data:updateUserDto,
+      where:{id}
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    return await this.prisma.user.delete({
+      where:{id}
+    });
+  }
+
+  async findByEmail(email:string){
+    return await this.prisma.user.findUnique({
+      where:{email}
+    })
   }
 }
