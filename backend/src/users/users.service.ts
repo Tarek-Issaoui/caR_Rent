@@ -7,23 +7,23 @@ import * as bcrypt from 'bcrypt';
 const salt=10
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma:PrismaService ,private readonly authService:AuthService){}
+  constructor(private readonly prisma:PrismaService ){}
 
   //register the use 
-  async create(createUserDto: CreateUserDto) {
-    const existingUser = await this.prisma.user.findUnique({
-      where:{ email :createUserDto.email}
-    });
-    if (existingUser) {
-      throw new ConflictException('Email already registered');
-    }
-    const hashedPassword=await bcrypt.hash(createUserDto.password,salt);
-    await this.prisma.user.create({
-      data:{...createUserDto,password:hashedPassword}
-    });
-    //Auto-login the user after registration 
-    return { message: 'User registered successfully' };
-  }
+  // async create(createUserDto: CreateUserDto) {
+  //   const existingUser = await this.prisma.user.findUnique({
+  //     where:{ email :createUserDto.email}
+  //   });
+  //   if (existingUser) {
+  //     throw new ConflictException('Email already registered');
+  //   }
+  //   const hashedPassword=await bcrypt.hash(createUserDto.password,salt);
+  //   await this.prisma.user.create({
+  //     data:{...createUserDto,password:hashedPassword}
+  //   });
+  //   //Auto-login the user after registration 
+  //   return { message: 'User registered successfully' };
+  // }
 
   async findAll() {
     return await this.prisma.user.findMany();
@@ -37,20 +37,20 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     return await this.prisma.user.update({
-      data:updateUserDto,
-      where:{id}
+      where:{id},
+      data:updateUserDto
     });
   }
-
+  
   async remove(id: string) {
     return await this.prisma.user.delete({
       where:{id}
     });
   }
 
-  async findByEmail(email:string){
-    return await this.prisma.user.findUnique({
-      where:{email}
-    })
-  }
+  // async findByEmail(email:string){
+  //   return await this.prisma.user.findUnique({
+  //     where:{email}
+  //   })
+  // }
 }

@@ -67,13 +67,13 @@ model Reservation {
 // Define your data model for Agency
 model Agency {
   id                 String   @id @default(uuid())
-  name               String
+  name               String   
   address            String?
   city               String?
   state              String?
   zipCode            String?
   phone              String?
-  email              String?
+  email              String? @unique
   password           String
   website            String?
   businessHours      String?
