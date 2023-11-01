@@ -26,7 +26,8 @@ model User {
   driverLicenseNumber String?
   driverLicenseExpiry DateTime?
   creditCardInfo      String? // You may want to store this securely in a real application
-
+  role                Role      @default(USER)
+  isBanned            Boolean   @default(false)
 
   // Define the relationship with Reservations
   reservations      Reservation[]
@@ -45,7 +46,7 @@ model User {
   // Define other relationships as needed
   Comment           Comment[]
   Like              Like[]
-  refreshTokens String?
+  refreshTokens     String?
 
   @@map("use")
 }
@@ -67,14 +68,15 @@ model Reservation {
 // Define your data model for Agency
 model Agency {
   id                 String   @id @default(uuid())
-  name               String   
+  name               String
   address            String?
   city               String?
   state              String?
   zipCode            String?
   phone              String?
-  email              String? @unique
+  email              String?  @unique
   password           String
+  role               Role     @default(AGENCY)
   website            String?
   businessHours      String?
   rentalPolicies     String?
@@ -88,30 +90,18 @@ model Agency {
   // Define the relationship with Cars
   cars               Car[]
   // Define the relationship with Posts
-  posts              Post[]
-
+  isBanned           Boolean  @default(true)
   // Define the relationship with Messages
   // sentMessages    Message[] @relation("SentMessages")
   // receivedMessages Message[] @relation("ReceivedMessages")
   // Define other relationships as needed
-  User User[]
-  refreshTokens String?
+  User               User[]
+  refreshTokens      String?
 
   @@map("agencies")
 }
 
 // Define your data model for Posts
-model Post {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  createdAt   DateTime  @default(now())
-  agency      Agency    @relation(fields: [agencyId], references: [id])
-  agencyId    String
-  comments    Comment[]
-  likes       Like[]
-  // Define other relationships as needed
-}
 
 // Define your data model for Cars
 model Car {
@@ -144,6 +134,8 @@ model Car {
   reviews     Review[]
   // Define other relationships as needed
   Reservation Reservation[]
+  comments    Comment[]
+  likes       Like[]
 }
 
 // schema.prisma
@@ -168,8 +160,8 @@ model Comment {
   id        String   @id @default(uuid())
   text      String
   createdAt DateTime @default(now())
-  post      Post     @relation(fields: [postId], references: [id])
-  postId    String
+  car       Car      @relation(fields: [carId], references: [id])
+  carId     String
   author    User     @relation(fields: [userId], references: [id])
   userId    String
   // Define other relationships as needed
@@ -180,8 +172,8 @@ model Like {
   id     String @id @default(uuid())
   user   User   @relation(fields: [userId], references: [id])
   userId String
-  post   Post   @relation(fields: [postId], references: [id])
-  postId String
+  car    Car    @relation(fields: [carId], references: [id])
+  carId  String
 }
 
 // Define your data model for Notifications
@@ -218,4 +210,18 @@ model LoyaltyMembership {
   userId       String   @unique
   // Add more loyalty membership-related properties as needed
   // ...
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  role      Role     @default(ADMIN)
+}
+
+enum Role {
+  USER
+  AGENCY
+  ADMIN
 }

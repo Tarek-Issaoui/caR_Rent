@@ -9,14 +9,29 @@ export class AtAuthGuard extends AuthGuard('jwt') {
         super();
     
     }
-    canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-        const isPublic=this.reflector.getAllAndOverride(
-            "isPublic",[
-            context.getHandler(),
-            context.getClass()
-        ]);
-        if(isPublic) return true;
-        return super.canActivate(context);
-    
-    }
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+      const isPublic = this.reflector.getAllAndOverride('isPublic', [context.getHandler(), context.getClass()]);
+      const allowedRoles = this.reflector.getAllAndOverride<string[]>('role-path', [context.getHandler(), context.getClass()]);
+      if (isPublic) return true;
+
+      await super.canActivate(context);
+
+      const request = context.switchToHttp().getRequest();
+      const user = request.user;
+      console.log(user);
+      
+      if (!allowedRoles) {
+          return true;
+      }
+
+      if (!user) {
+          return false;
+      }
+
+      if (!allowedRoles.includes(user?.role)) {
+          return false;
+      }
+
+      return true;
+  }
 }

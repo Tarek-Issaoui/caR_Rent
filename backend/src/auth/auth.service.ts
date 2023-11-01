@@ -35,10 +35,10 @@ export class AuthService {
   }
 
   
-  async getToken(userId:string ,email: string){
+  async getToken(userId:string ,email: string,role:string){
     const [at,rt]=await Promise.all([
-      this.jwtService.signAsync({ sub: userId, email: email }, {secret:process.env.jwt_secret,expiresIn:'15m'}),
-      this.jwtService.signAsync({ sub: userId, email: email }, {secret:process.env.rt_secret,expiresIn:'7d'})
+      this.jwtService.signAsync({ sub: userId, email: email ,role:role}, {secret:process.env.jwt_secret,expiresIn:'15m'}),
+      this.jwtService.signAsync({ sub: userId, email: email ,role:role}, {secret:process.env.rt_secret,expiresIn:'7d'})
     ])
     return {accessToken:at,refreshToken:rt}
   }
@@ -51,7 +51,7 @@ export class AuthService {
     if (!user) throw new NotFoundException(`No user found for email: ${email}`);
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid password');
-    const tokens= await this.getToken(user.id,user.email)
+    const tokens= await this.getToken(user.id,user.email,"USER")
     await this.updateRtHashUser(user.id,tokens.refreshToken);
     return tokens;
   }
@@ -64,7 +64,7 @@ export class AuthService {
     if (!agency) throw new NotFoundException(`No agency found for email: ${email}`);
     const isPasswordValid = await bcrypt.compare(pass, agency.password);
     if (!isPasswordValid) throw new UnauthorizedException('Invalid password');
-    const tokens= await this.getToken(agency.id,agency.email)
+    const tokens= await this.getToken(agency.id,agency.email,"AGENCY")
     await this.updateRtHashAgency(agency.id,tokens.refreshToken);
     return tokens;
   }
@@ -88,7 +88,7 @@ export class AuthService {
         driverLicenseExpiry:new Date(createUserDto.driverLicenseExpiry)
       }
     })
-    const tokens=await this.getToken(newUser.id,newUser.email);
+    const tokens=await this.getToken(newUser.id,newUser.email,"USER");
     await this.updateRtHashUser(newUser.id,tokens.refreshToken);
     return tokens;
   }
@@ -109,7 +109,7 @@ export class AuthService {
         password:hashedPassword
       }
     })
-    const tokens=await this.getToken(newAgency.id,newAgency.email);
+    const tokens=await this.getToken(newAgency.id,newAgency.email,"AGENCY");
     await this.updateRtHashAgency(newAgency.id,tokens.refreshToken);
     return tokens;
   }
@@ -154,7 +154,7 @@ export class AuthService {
     if(!user) throw new ForbiddenException('User not found');
     const rtMatches = await bcrypt.compare(rt,user.refreshTokens);
     if(!rtMatches) throw new ForbiddenException('Invalid refresh token');
-    const tokens = await this.getToken(user.id,user.email);
+    const tokens = await this.getToken(user.id,user.email,"USER");
     await this.updateRtHashUser(user.id,tokens.refreshToken);
     return tokens;
   }
@@ -169,7 +169,7 @@ export class AuthService {
     if(!agency) throw new ForbiddenException('Agency not found');
     const rtMatches = await bcrypt.compare(rt,agency.refreshTokens);
     if(!rtMatches) throw new ForbiddenException('Invalid refresh token');
-    const tokens = await this.getToken(agency.id,agency.email);
+    const tokens = await this.getToken(agency.id,agency.email,"AGENCY");
     await this.updateRtHashAgency(agency.id,tokens.refreshToken);
     return tokens;
   }

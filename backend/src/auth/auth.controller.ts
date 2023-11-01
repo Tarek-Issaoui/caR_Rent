@@ -8,6 +8,9 @@ import { GetCurrentUser } from './decorator/get-curr-user.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Public } from './decorator/public.decorator';
 import { CreateAgencyDto } from 'src/agencies/dto/create-agency.dto';
+import { RolePath } from './decorator/roles.decorator';
+
+
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
@@ -44,6 +47,7 @@ export class AuthController {
 
 
   @Post('logoutUser')
+  @RolePath(["USER"])
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async logoutUser(@GetCurrentUser('sub') id:string){
@@ -51,6 +55,7 @@ export class AuthController {
   }
 
   @Post('logoutAgency')
+  @RolePath(["AGENCY"])
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async logoutAgency(@GetCurrentUser('sub') id:string){
@@ -61,6 +66,7 @@ export class AuthController {
 
 
   @Public()
+  @RolePath(["USER"])
   @Post('refreshUserToken')
   @UseGuards(RtAuthGuard)
   @ApiBearerAuth()
@@ -71,6 +77,7 @@ export class AuthController {
 
 
   @Public()
+  @RolePath(["AGENCY"])
   @Post('refreshAgencyToken')
   @UseGuards(RtAuthGuard)
   @ApiBearerAuth()

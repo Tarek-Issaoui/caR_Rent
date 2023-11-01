@@ -5,6 +5,7 @@ import { Injectable } from "@nestjs/common"
 type JwtPayload = {
     sub: string
     email: string
+    role: string
 }
 @Injectable()
 export class AtStrategy extends PassportStrategy(Strategy,'jwt'){
@@ -15,6 +16,8 @@ export class AtStrategy extends PassportStrategy(Strategy,'jwt'){
         })
     }
     async validate(payload: JwtPayload){
+        // console.log(payload);
+        
         return payload;
     }
     
